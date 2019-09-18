@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.bk.exchange.controller.ExchangeRateIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.739 s - in com.bk.exchange.controller.ExchangeRateIntegrationTest
