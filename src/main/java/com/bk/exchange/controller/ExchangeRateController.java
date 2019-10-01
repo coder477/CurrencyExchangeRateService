@@ -26,84 +26,83 @@ import static org.slf4j.LoggerFactory.getLogger;
 @RequestMapping("/api/exchange-rate")
 public class ExchangeRateController {
 
-	@Autowired
-	private ExchangeService exchangeService;
+    private static final Logger log = getLogger(ExchangeService.class);
 
-	private static final Logger log = getLogger(ExchangeService.class);
-	
-	/**
+    @Autowired
+    private ExchangeService exchangeService;
+
+    /**
      * Service to find exchange rate between two currencies on a given date
      */
 
-	@RequestMapping(method = RequestMethod.GET, value = "/{date}/{baseCurrency}/{targetCurrency}")
-	public ResponseEntity exchangeRate(@PathVariable String date, @PathVariable String baseCurrency,
-			@PathVariable String targetCurrency) throws ParseException {
-		Utils.validateDate(date);
-		CurrentExchangeRate currentExchangeRate = exchangeService.getExchangeRate(Utils.parseDate(date),
-				baseCurrency,
-				targetCurrency);
-		return ResponseEntity.ok(currentExchangeRate);
-	}
-	
-	/**
+    @RequestMapping(method = RequestMethod.GET, value = "/{date}/{baseCurrency}/{targetCurrency}")
+    public ResponseEntity exchangeRate(@PathVariable String date, @PathVariable String baseCurrency,
+                                       @PathVariable String targetCurrency) throws ParseException {
+        Utils.validateDate(date);
+        CurrentExchangeRate currentExchangeRate = exchangeService.getExchangeRate(Utils.parseDate(date),
+                baseCurrency,
+                targetCurrency);
+        return ResponseEntity.ok(currentExchangeRate);
+    }
+
+    /**
      * Service to find exchange rate history on a given date
      */
 
-	@RequestMapping(method = RequestMethod.GET, value = "/history/daily/{year}/{month}/{day}")
-	public ResponseEntity getDailyExchangeRateHistory(@PathVariable String year, @PathVariable String month,
-													  @PathVariable String day) throws ParseException {
-		Utils.validateDay(day);
-		Utils.validateYear(year);
-		Utils.validateMonth(month);
+    @RequestMapping(method = RequestMethod.GET, value = "/history/daily/{year}/{month}/{day}")
+    public ResponseEntity getDailyExchangeRateHistory(@PathVariable String year, @PathVariable String month,
+                                                      @PathVariable String day) throws ParseException {
+        Utils.validateDay(day);
+        Utils.validateYear(year);
+        Utils.validateMonth(month);
 
-		List<ExchangeRateHistoryResponse> exchangeRateHistoryObject =
-				exchangeService.getDailyExchangeRateHistory(
-						Integer.parseInt(year),
-						Integer.parseInt(month),
-						Integer.parseInt(day)
-				);
-		return ResponseEntity.ok(exchangeRateHistoryObject);
-	}
-	
-	/**
+        List<ExchangeRateHistoryResponse> exchangeRateHistoryObject =
+                exchangeService.getDailyExchangeRateHistory(
+                        Integer.parseInt(year),
+                        Integer.parseInt(month),
+                        Integer.parseInt(day)
+                );
+        return ResponseEntity.ok(exchangeRateHistoryObject);
+    }
+
+    /**
      * Service to find exchange rate history on a given month of the year
      */
 
-	@RequestMapping(method = RequestMethod.GET, value = "/history/monthly/{yyyy}/{MM}")
-	public ResponseEntity getMothlyExchangeRateHistory(@PathVariable String yyyy, @PathVariable String MM) {
+    @RequestMapping(method = RequestMethod.GET, value = "/history/monthly/{yyyy}/{MM}")
+    public ResponseEntity getMothlyExchangeRateHistory(@PathVariable String yyyy, @PathVariable String MM) {
 
-		Utils.validateYear(yyyy);
-		Utils.validateMonth(MM);
+        Utils.validateYear(yyyy);
+        Utils.validateMonth(MM);
 
-		List<ExchangeRateHistoryResponse> exchangeRateHistoryObject=
-				exchangeService.getMonthlyExchangeRateHistory(Integer.parseInt(yyyy), Integer.parseInt(MM));
-		return ResponseEntity.ok(exchangeRateHistoryObject);
-	}
+        List<ExchangeRateHistoryResponse> exchangeRateHistoryObject =
+                exchangeService.getMonthlyExchangeRateHistory(Integer.parseInt(yyyy), Integer.parseInt(MM));
+        return ResponseEntity.ok(exchangeRateHistoryObject);
+    }
 
-	/**
-	 *
-	 * Exception handlers for this controller are added below.
-	 */
+    /**
+     * Exception handlers for this controller are added below.
+     */
 
-	@ExceptionHandler(BadRequestException.class)
-	public ResponseEntity handleBadRequestException(BadRequestException exception) {
-		log.error("Exception while processing request", exception);
-		return ResponseEntity
-				.badRequest()
-				.body(new ErrorReponse(exception.getValue().value(),
-						"Please verify the given request."
-						, exception.getMessage())
-				);
-	}
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity handleBadRequestException(BadRequestException exception) {
+        log.error("Exception while processing request", exception);
+        return ResponseEntity
+                .badRequest()
+                .body(new ErrorReponse(exception.getValue().value(),
+                        "Please verify the given request."
+                        , exception.getMessage())
+                );
+    }
 
-	@ExceptionHandler(ExternalApiException.class)
-	public ResponseEntity handleExternalApiError(ExternalApiException exception) {
-		log.error("Exception while processing request", exception);
-		return ResponseEntity
-				.badRequest()
-				.body(new ErrorReponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-						"Somthing went Wrong.",
-						exception.getValue())
-				);
-	}
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity handleExternalApiError(ExternalApiException exception) {
+        log.error("Exception while processing request", exception);
+        return ResponseEntity
+                .badRequest()
+                .body(new ErrorReponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "Somthing went Wrong.",
+                        exception.getValue())
+                );
+    }
 }

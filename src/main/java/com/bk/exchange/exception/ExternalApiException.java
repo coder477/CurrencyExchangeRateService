@@ -3,6 +3,7 @@ package com.bk.exchange.exception;
 public class ExternalApiException extends RuntimeException {
 
     private String value;
+
     private String message;
 
     public ExternalApiException(String value, String message) {

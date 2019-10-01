@@ -14,13 +14,14 @@ import java.util.Date;
 public class Utils {
 
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
     private static String specifiedLimitDate = "2000-01-01";
 
     public static Date parseDate(String date) {
         dateFormat.setLenient(false);
         Date d = null;
         try {
-             d = dateFormat.parse(date);
+            d = dateFormat.parse(date);
         } catch (ParseException e) {
             throw new BadRequestException(HttpStatus.BAD_REQUEST, "Please enter date in valid format yyyy-MM-dd ");
         }
@@ -36,7 +37,7 @@ public class Utils {
         }
         Date dSpecified = parseDate(specifiedLimitDate);
         if (dSpecified.after(d)) {
-            throw new BadRequestException(HttpStatus.BAD_REQUEST, "Please enter date later than "+specifiedLimitDate);
+            throw new BadRequestException(HttpStatus.BAD_REQUEST, "Please enter date later than " + specifiedLimitDate);
         }
     }
 
@@ -75,8 +76,8 @@ public class Utils {
 
     public static ExchangeRateHistoryResponse convert(ExchangeRateHistory exchangeRateHistory) {
         return new ExchangeRateHistoryResponse(
-        		exchangeRateHistory.getKey().getBaseCurrency(),
-        		exchangeRateHistory.getKey().getTargetCurrency(),
+                exchangeRateHistory.getKey().getBaseCurrency(),
+                exchangeRateHistory.getKey().getTargetCurrency(),
                 String.valueOf(exchangeRateHistory.getExchangeRate()),
                 String.valueOf(exchangeRateHistory.getCumulativeExchangeRateAverage()),
                 exchangeRateHistory.getExchangeTrend(),

@@ -19,7 +19,7 @@ public interface ExchangeHistoryDao extends JpaRepository<ExchangeRateHistory, E
 
     @Query(value = "SELECT e FROM ExchangeRateHistory e where year(e.key.date)=:year and month(e.key.date)=:month")
     List<ExchangeRateHistory> findExchangeRateHistoriesByYearMonth(@Param("year") Integer year,
-                                                              @Param("month") Integer month);
+                                                                   @Param("month") Integer month);
 
     @Query(value = "SELECT e FROM ExchangeRateHistory e where year(e.key.date)=:year and month(e.key.date)=:month" +
             " and day(e.key.date)=:day")

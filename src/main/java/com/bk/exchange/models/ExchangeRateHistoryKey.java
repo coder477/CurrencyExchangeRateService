@@ -1,7 +1,5 @@
 package com.bk.exchange.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Temporal;
@@ -11,11 +9,12 @@ import java.util.Date;
 
 @Embeddable
 public class ExchangeRateHistoryKey implements Serializable {
-    @Column(name="date")
+
+    @Column(name = "date")
     @Temporal(TemporalType.DATE)
     private Date date;
 
-    @Column(name="base_currency")
+    @Column(name = "base_currency")
     private String baseCurrency;
 
     @Column(name = "target_currency")

@@ -1,22 +1,17 @@
 package com.bk.exchange.response;
 
-import org.springframework.http.HttpStatus;
-
-
 public class ErrorReponse {
+
+    private int status;
+
+    private String title;
+
+    private String description;
 
     public ErrorReponse(int status, String title, String description) {
         this.status = status;
         this.description = description;
         this.title = title;
-    }
-
-    private int status;
-    private String title;
-    private String description;
-
-    public void setStatus(int status) {
-        this.status = status;
     }
 
     public String getTitle() {
@@ -37,5 +32,9 @@ public class ErrorReponse {
 
     public int getStatus() {
         return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }
