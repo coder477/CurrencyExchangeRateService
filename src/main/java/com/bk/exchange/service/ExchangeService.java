@@ -28,140 +28,140 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Component
 public class ExchangeService {
 
-	private static final Logger log = getLogger(ExchangeService.class);
+    private static final Logger log = getLogger(ExchangeService.class);
 
-	private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-	@Autowired
-	public ExchangeRateApiWrapper exchangeRateApiWrapper;
+    @Autowired
+    public ExchangeRateApiWrapper exchangeRateApiWrapper;
 
-	@Autowired
-	public ExchangeHistoryDao exchangeHistoryDao;
+    @Autowired
+    public ExchangeHistoryDao exchangeHistoryDao;
 
-	public CurrentExchangeRate getExchangeRate(Date date, String baseCurrency, String targetCurrency)
-			throws ParseException {
+    public CurrentExchangeRate getExchangeRate(Date date, String baseCurrency, String targetCurrency)
+            throws ParseException {
 
-		Date endDate = getBaseDate(date);
-		Date startDate = getStartDate(dateFormat.format(endDate.getTime()));
+        Date endDate = getBaseDate(date);
+        Date startDate = getStartDate(dateFormat.format(endDate.getTime()));
 
-		JSONObject response = exchangeRateApiWrapper.getExchangeBetween(dateFormat.format(startDate.getTime()), dateFormat.format(endDate.getTime()), baseCurrency,
-				targetCurrency);
+        JSONObject response = exchangeRateApiWrapper.getExchangeBetween(dateFormat.format(startDate.getTime()),
+                dateFormat.format(endDate.getTime()), baseCurrency,
+                targetCurrency);
 
-		double rate = response.getJSONObject("rates").getJSONObject(dateFormat.format(startDate.getTime())).getDouble(targetCurrency);
-		double averageRate = getAverageRate(response.getJSONObject("rates"), targetCurrency);
-		Trend rateTrend = getExchangeRateTrend(response.getJSONObject("rates"), targetCurrency);
+        double rate =
+                response.getJSONObject("rates").getJSONObject(dateFormat.format(startDate.getTime())).getDouble(targetCurrency);
+        double averageRate = getAverageRate(response.getJSONObject("rates"), targetCurrency);
+        Trend rateTrend = getExchangeRateTrend(response.getJSONObject("rates"), targetCurrency);
 
-		CurrentExchangeRate currentRate = new CurrentExchangeRate();
-		currentRate.setAverageRate(averageRate);
-		currentRate.setExchangeRate(rate);
-		currentRate.setExchangeRateTrend(rateTrend);
+        CurrentExchangeRate currentRate = new CurrentExchangeRate();
+        currentRate.setAverageRate(averageRate);
+        currentRate.setExchangeRate(rate);
+        currentRate.setExchangeRateTrend(rateTrend);
 
-		ExchangeRateHistory history = new ExchangeRateHistory();
-		ExchangeRateHistoryKey key = new ExchangeRateHistoryKey();
-		key.setBaseCurrency(baseCurrency);
-		key.setTargetCurrency(targetCurrency);
-		key.setDate(endDate);
-		history.setExchangeRate(rate);
-		history.setExchangeTrend(rateTrend);
-		history.setCumulativeExchangeRateAverage(averageRate);
-		history.setKey(key);
+        ExchangeRateHistory history = new ExchangeRateHistory();
+        ExchangeRateHistoryKey key = new ExchangeRateHistoryKey();
+        key.setBaseCurrency(baseCurrency);
+        key.setTargetCurrency(targetCurrency);
+        key.setDate(endDate);
+        history.setExchangeRate(rate);
+        history.setExchangeTrend(rateTrend);
+        history.setCumulativeExchangeRateAverage(averageRate);
+        history.setKey(key);
 
-		exchangeHistoryDao.save(history); // saving the successful requests to DB as history data
+        exchangeHistoryDao.save(history); // saving the successful requests to DB as history data
 
-		return currentRate;
-	}
+        return currentRate;
+    }
 
-	public List<ExchangeRateHistoryResponse> getDailyExchangeRateHistory(Integer year, Integer month, Integer day) {
-		return exchangeHistoryDao.findExchangeRateHistoriesByYearMonthandDate(year, month, day).stream()
-				.map(Utils::convert).collect(Collectors.toList());
-	}
+    public List<ExchangeRateHistoryResponse> getDailyExchangeRateHistory(Integer year, Integer month, Integer day) {
+        return exchangeHistoryDao.findExchangeRateHistoriesByYearMonthandDate(year, month, day).stream()
+                .map(Utils::convert).collect(Collectors.toList());
+    }
 
-	public List<ExchangeRateHistoryResponse> getMonthlyExchangeRateHistory(Integer year, Integer month) {
-		return exchangeHistoryDao.findExchangeRateHistoriesByYearMonth(year, month).stream().map(Utils::convert)
-				.collect(Collectors.toList());
-	}
-	
-	
-	/**
-	 * gets the exchange rate trend
-	 */
-	private Trend getExchangeRateTrend(JSONObject obj, String targetCurrency) {
+    public List<ExchangeRateHistoryResponse> getMonthlyExchangeRateHistory(Integer year, Integer month) {
+        return exchangeHistoryDao.findExchangeRateHistoriesByYearMonth(year, month).stream().map(Utils::convert)
+                .collect(Collectors.toList());
+    }
 
-		List<Date> lastFiveDays = new ArrayList<>();
-		try {
-			for (String key : obj.keySet()) {
-				lastFiveDays.add(dateFormat.parse(key));
-			}
-			Collections.sort(lastFiveDays);
-		} catch (ParseException ex) {
-			throw new ExternalApiException("Response date not in right format", ex.getMessage());
-		}
+    /**
+     * gets the exchange rate trend
+     */
+    private Trend getExchangeRateTrend(JSONObject obj, String targetCurrency) {
 
-		List<Double> rates = new ArrayList<>();
+        List<Date> lastFiveDays = new ArrayList<>();
+        try {
+            for (String key : obj.keySet()) {
+                lastFiveDays.add(dateFormat.parse(key));
+            }
+            Collections.sort(lastFiveDays);
+        } catch (ParseException ex) {
+            throw new ExternalApiException("Response date not in right format", ex.getMessage());
+        }
 
-		for (Date key : lastFiveDays) {
-			rates.add(obj.getJSONObject(dateFormat.format(key.getTime())).getDouble(targetCurrency));
-		}
-		int ascending = 0;
-		int descending = 0;
-		for (int i = 0; i < rates.size() - 1; i++) {
-			if (Double.compare(rates.get(i), rates.get(i + 1)) == -1) {
-				ascending = 1;
-			} else if (Double.compare(rates.get(i), rates.get(i + 1)) == 1) {
-				descending = 1;
-			}
-		}
+        List<Double> rates = new ArrayList<>();
 
-		if (ascending == 0 && descending == 0) {
-			return Trend.CONSTANT;
-		}
-		if (ascending == 1 && descending == 1) {
-			return Trend.UNDEFINED;
-		}
-		if (ascending == 1 && descending == 0) {
-			return Trend.ASCENDING;
-		}
-		return Trend.DESCENDING;
-	}
+        for (Date key : lastFiveDays) {
+            rates.add(obj.getJSONObject(dateFormat.format(key.getTime())).getDouble(targetCurrency));
+        }
+        int ascending = 0;
+        int descending = 0;
+        for (int i = 0; i < rates.size() - 1; i++) {
+            if (Double.compare(rates.get(i), rates.get(i + 1)) == -1) {
+                ascending = 1;
+            } else if (Double.compare(rates.get(i), rates.get(i + 1)) == 1) {
+                descending = 1;
+            }
+        }
 
-	private double getAverageRate(JSONObject obj, String targetCurrency) {
-		return obj.keySet().stream().mapToDouble(x -> obj.getJSONObject(x).getDouble(targetCurrency)).average()
-				.orElseThrow(IllegalArgumentException::new);
-	}
+        if (ascending == 0 && descending == 0) {
+            return Trend.CONSTANT;
+        }
+        if (ascending == 1 && descending == 1) {
+            return Trend.UNDEFINED;
+        }
+        if (ascending == 1 && descending == 0) {
+            return Trend.ASCENDING;
+        }
+        return Trend.DESCENDING;
+    }
 
+    private double getAverageRate(JSONObject obj, String targetCurrency) {
+        return obj.keySet().stream().mapToDouble(x -> obj.getJSONObject(x).getDouble(targetCurrency)).average()
+                .orElseThrow(IllegalArgumentException::new);
+    }
 
-	/**
-	 * gets the 5th day back from today excluding saturdays and sundays
-	 */
+    /**
+     * gets the 5th day back from today excluding saturdays and sundays
+     */
 
-	private Date getStartDate(String date) throws ParseException {
+    private Date getStartDate(String date) throws ParseException {
 
-		Date baseDate = new SimpleDateFormat("yyyy-MM-dd").parse(date);
-		Calendar baseDateCalculated = Calendar.getInstance();
-		baseDateCalculated.setTime(baseDate);
-		for (int i = 0; i < 4; i++) {
-			baseDateCalculated.add(Calendar.DATE, -1);
-			if (baseDateCalculated.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-				baseDateCalculated.add(Calendar.DATE, -2);
-			}
-		}
-		return baseDateCalculated.getTime();
-	}
+        Date baseDate = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        Calendar baseDateCalculated = Calendar.getInstance();
+        baseDateCalculated.setTime(baseDate);
+        for (int i = 0; i < 4; i++) {
+            baseDateCalculated.add(Calendar.DATE, -1);
+            if (baseDateCalculated.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+                baseDateCalculated.add(Calendar.DATE, -2);
+            }
+        }
+        return baseDateCalculated.getTime();
+    }
 
-	/**
-	 * get the date to start finding transaction rate while handling Saturdays and Sundays
-	 */
+    /**
+     * get the date to start finding transaction rate while handling Saturdays and Sundays
+     */
 
-	private Date getBaseDate(Date baseDate) {
+    private Date getBaseDate(Date baseDate) {
 
-		Calendar baseDateCalculated = Calendar.getInstance();
-		baseDateCalculated.setTime(baseDate);
-		if (baseDateCalculated.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-			baseDateCalculated.add(Calendar.DATE, -2);
-		}
-		if (baseDateCalculated.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
-			baseDateCalculated.add(Calendar.DATE, -1);
-		}
-		return baseDateCalculated.getTime();
-	}
+        Calendar baseDateCalculated = Calendar.getInstance();
+        baseDateCalculated.setTime(baseDate);
+        if (baseDateCalculated.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+            baseDateCalculated.add(Calendar.DATE, -2);
+        }
+        if (baseDateCalculated.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
+            baseDateCalculated.add(Calendar.DATE, -1);
+        }
+        return baseDateCalculated.getTime();
+    }
 }

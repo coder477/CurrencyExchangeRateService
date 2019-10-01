@@ -14,13 +14,13 @@ import javax.persistence.Table;
 @Table(name = "exchange_history", schema = "bk_exchange_demo")
 public class ExchangeRateHistory {
 
-    @Column(name="exchange_rate")
+    @Column(name = "exchange_rate")
     private double exchangeRate;
 
-    @Column(name="cumulative_exchange_rate_average")
+    @Column(name = "cumulative_exchange_rate_average")
     private double cumulativeExchangeRateAverage;
 
-    @Column(name="exchange_trend")
+    @Column(name = "exchange_trend")
     @Enumerated(EnumType.STRING)
     private Trend exchangeTrend;
 

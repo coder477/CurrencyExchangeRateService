@@ -3,14 +3,19 @@ package com.bk.exchange.response;
 public class ExchangeRateHistoryResponse {
 
     private String baseCurrency;
+
     private String targetCurrency;
+
     private String exchangeRate;
+
     private String cumulativeExchangeRateAverage;
+
     private Trend exchangeTrend;
+
     private String date;
 
     public ExchangeRateHistoryResponse(String baseCurrency, String targetCurrency, String exchangeRate,
-                                   String cumulativeExchangeRateAverage, Trend exchangeTrend, String date) {
+                                       String cumulativeExchangeRateAverage, Trend exchangeTrend, String date) {
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
         this.exchangeRate = exchangeRate;
